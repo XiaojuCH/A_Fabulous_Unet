@@ -16,7 +16,9 @@ import os
 # from NNNew_att_v2_PPPGPT_final_bk import GSCSA
 # from NNNew_att_v2_PPPGPT_final_bk import GSCSA
 
-from NNNew_att_GAL_bk import GAL_Adapter
+# from NNNew_att_GAL_bk import GAL_Adapter
+
+from NNNew_att_GAL_V11 import GAL_Adapter  # V11: 8分支 + 3统计量版本
 
 # from NNNew_att_GAL_Notin import GAL_Adapter
 # from NNNew_att_GAL_V2 import GAL_Adapter
@@ -35,8 +37,8 @@ from NNNew_att_GAL_bk import GAL_Adapter
 # 主模型：ST-SAM (High-Res Injection Version)
 # ==============================================================================
 class ST_SAM(nn.Module):
-    def __init__(self, 
-                 model_cfg="sam2_hiera_l.yaml", 
+    def __init__(self,
+                 model_cfg="sam2_hiera_l.yaml",
                  checkpoint_path="./checkpoints/sam2_hiera_large.pt"
                  ):
         super().__init__()

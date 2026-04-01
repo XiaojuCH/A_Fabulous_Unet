@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(cat /y/workspace/data/root/xiaoju/Eye_River_new/configs/*.yaml)"
     ]
   }
 }

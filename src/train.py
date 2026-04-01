@@ -120,7 +120,7 @@ def main(fold):
     val_loader = DataLoader(val_dataset, batch_size=CONFIG['batch_size'], sampler=val_sampler, num_workers=CONFIG['num_workers'], pin_memory=True)
 
     # model = ST_SAM(checkpoint_path="./checkpoints/sam2_hiera_large.pt").to(local_rank)
-    model = ST_SAM(checkpoint_path="./checkpoints/sam2_hiera_large.pt").to(local_rank)
+    model = ST_SAM().to(local_rank)  # 使用默认的Hiera配置
     # model = True_MedSAM(checkpoint_path="./checkpoints/medsam_vit_b.pth").to(local_rank) #记得这个是madsam的权重
     model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
     model = DDP(model, device_ids=[local_rank], find_unused_parameters=True)
@@ -133,7 +133,7 @@ def main(fold):
     best_dice = 0.0
     best_epoch = 0
     # save_dir = f"./checkpoints/fold_{fold}"
-    save_dir = f"./checkpoints_gal3/fold_{fold}"
+    save_dir = f"./checkpoints_gal4/fold_{fold}"
     if is_master:
         os.makedirs(save_dir, exist_ok=True)
 
