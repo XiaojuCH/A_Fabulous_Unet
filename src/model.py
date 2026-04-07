@@ -16,9 +16,9 @@ import os
 # from NNNew_att_v2_PPPGPT_final_bk import GSCSA
 # from NNNew_att_v2_PPPGPT_final_bk import GSCSA
 
-# from NNNew_att_GAL_bk import GAL_Adapter
+from NNNew_att_GAL_bk import GAL_Adapter
 
-from NNNew_att_GAL_V11 import GAL_Adapter  # V11: 8分支 + 3统计量版本
+# from NNNew_att_GAL_V11 import GAL_Adapter  # V11: 8分支 + 3统计量版本
 
 # from NNNew_att_GAL_Notin import GAL_Adapter
 # from NNNew_att_GAL_V2 import GAL_Adapter
