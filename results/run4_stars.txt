@@ -1,0 +1,17 @@
+=== vs SAM_Baseline (must all be significant) ===
+  Dice    : p=0.00135  **  (better)
+  IoU     : p=0.00081  ***  (better)
+  Recall  : p=0.04735  *  (better)
+  Prec    : p=0.00831  **  (better)
+  HD95    : p=0.01751  *  (better)
+  ASD     : p=0.26601  ns  (better)
+
+=== vs PlanC16 (reference, informational) ===
+  Dice    : p=0.19617  ns  (vs PlanC16: -0.0006)
+  IoU     : p=0.13938  ns  (vs PlanC16: -0.0009)
+  Recall  : p=0.64881  ns  (vs PlanC16: +0.0009)
+  Prec    : p=0.33353  ns  (vs PlanC16: -0.0020)
+  HD95    : p=0.15718  ns  (vs PlanC16: -0.2800)
+  ASD     : p=0.12378  ns  (vs PlanC16: -0.2900)
+
+RESULT: NOT_SIGNIFICANT - Some metrics are ns vs baseline.

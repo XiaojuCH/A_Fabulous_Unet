@@ -118,7 +118,7 @@ def calculate_metrics_robust(pred, lbl):
 def evaluate_fold(fold):
     print(f"🔄 Evaluating Fold {fold} ...")
     split_path = f"./data_splits/fold_{fold}.json"
-    ckpt_path = f"./checkpoints_gal5/fold_{fold}/best_model.pth"
+    ckpt_path = os.path.join(os.environ.get("CKPT_DIR", "./checkpoints_run1"), f"fold_{fold}/best_model.pth")
     
     if not os.path.exists(ckpt_path):
         print(f"⚠️ Checkpoint not found: {ckpt_path}, skipping Fold {fold}")
