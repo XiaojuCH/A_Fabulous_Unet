@@ -10,8 +10,13 @@ from tqdm import tqdm
 
 sys.path.append("src")
 
-# 引入 MONAI 严谨指标
-from monai.metrics import compute_dice, compute_hausdorff_distance
+# 引入 MONAI 全量严谨指标
+from monai.metrics import (
+    compute_dice, 
+    compute_hausdorff_distance,
+    compute_iou,
+    compute_average_surface_distance
+)
 
 from dataset import TearDataset
 from model import ST_SAM, Baseline_SAM2, MSA_Baseline_SAM2, LoRA_SAM2
@@ -20,21 +25,20 @@ from model import ST_SAM, Baseline_SAM2, MSA_Baseline_SAM2, LoRA_SAM2
 IMG_SIZE = 1024
 MAX_HD95 = math.sqrt(IMG_SIZE**2 + IMG_SIZE**2)
 DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-OUTPUT_CSV = "evaluation_results_5folds.csv"
+OUTPUT_CSV = "evaluation_results_5folds_full.csv" # 换了个新名字，防止和之前冲突
 
 # 【请核对并修改你的权重路径规则】
-# 脚本会自动把 {fold} 替换为 0~4
 CHECKPOINT_PATHS = {
-    "ST-SAM": "./checkpoints_gal1/fold_{fold}/best_model.pth",
-    "MSA_SAM2": "./checkpoints_msa/fold_{fold}/best_model.pth",         # 请确认你的 MSA 存放路径
+    "ST-SAM": "./checkpoints_run1/fold_{fold}/best_model.pth", 
+    "MSA_SAM2": "./checkpoints_msa/fold_{fold}/best_model.pth",         
     "Baseline_SAM2": "./checkpoints_ablation/fold_{fold}/best_model.pth", 
-    "LoRA_SAM2": "./checkpoints_lora/fold_{fold}/best_model.pth"        # 如果你没跑完 LoRA，程序会自动跳过它
+    "LoRA_SAM2": "./checkpoints_lora/fold_{fold}/best_model.pth"        
 }
 
-PADDINGS = [-5, 0, 5, 10, 20, 30, 40, "YOLO"] # 加入 "YOLO" 用于后续真实提示分析
+PADDINGS = [-5, 0, 5, 10, 20, 30, 40, "YOLO"]
 
-# ================= 严谨指标计算 =================
-def compute_metrics_monai(pred_tensor, gt_tensor):
+# ================= 极其严谨的全量指标计算 (严格对齐 get_final_table_v2) =================
+def compute_all_metrics(pred_tensor, gt_tensor):
     """
     输入必须是在 CPU 上的 [1, 1, H, W] Tensor
     """
@@ -46,44 +50,55 @@ def compute_metrics_monai(pred_tensor, gt_tensor):
     pred = (pred_tensor > 0.5).float()
     lbl = (gt_tensor > 0.5).float()
     
-    # 1. Dice
+    # 1. Dice & IoU
     if lbl.sum() == 0 and pred.sum() == 0:
         dice_score = 1.0
+        iou_score = 1.0
     else:
         dice_score = compute_dice(pred, lbl, include_background=False).item()
-        if math.isnan(dice_score):
-            dice_score = 0.0
+        iou_score = compute_iou(pred, lbl, include_background=False).item()
+        if math.isnan(dice_score): dice_score = 0.0
+        if math.isnan(iou_score): iou_score = 0.0
+        
+    # 2. Precision & Recall (像素级硬算，最严谨)
+    tp = (pred * lbl).sum().item()
+    fp = (pred * (1 - lbl)).sum().item()
+    fn = ((1 - pred) * lbl).sum().item()
+    
+    recall = tp / (tp + fn + 1e-6)
+    precision = tp / (tp + fp + 1e-6)
 
-    # 2. HD95
+    # 3. HD95 & ASD
     if lbl.sum() > 0 and pred.sum() > 0:
         hd95 = compute_hausdorff_distance(pred, lbl, include_background=False, percentile=95).item()
-        if math.isnan(hd95):
-            hd95 = MAX_HD95
+        asd = compute_average_surface_distance(pred, lbl, include_background=False).item()
+        if math.isnan(hd95): hd95 = MAX_HD95
+        if math.isnan(asd): asd = MAX_HD95 / 2
     elif lbl.sum() > 0 and pred.sum() == 0:
         hd95 = MAX_HD95 
+        asd = MAX_HD95 / 2
     else:
         if pred.sum() == 0:
             hd95 = 0.0
+            asd = 0.0
         else:
             hd95 = MAX_HD95
+            asd = MAX_HD95
 
-    return dice_score, hd95
+    return dice_score, iou_score, recall, precision, hd95, asd
 
 # ================= 智能数据加载器 =================
 class RobustnessDataset(TearDataset):
     def __init__(self, data_list, img_size, yolo_pred_json, padding=0):
-        # 初始化父类，如果是 YOLO 模式，父类会自动读取 JSON 里的 YOLO 框
         super().__init__(data_list, mode="val", img_size=img_size, yolo_pred_json=yolo_pred_json)
         self.padding = padding
 
     def __getitem__(self, idx):
         item = super().__getitem__(idx)
         
-        # 如果是 YOLO 模式，直接返回父类处理好的 item（里面已经是 YOLO 框了）
         if self.padding == "YOLO":
             return item
             
-        # 否则，基于完美的 GT 施加人工 Padding
         label_np = item['label'].squeeze().numpy()
         y_indices, x_indices = np.where(label_np > 0)
         
@@ -104,17 +119,16 @@ class RobustnessDataset(TearDataset):
 
 # ================= 主控制流 =================
 def main():
-    print(f"🚀 启动 5-Fold 鲁棒性全量数据生成管线...")
+    print(f"🚀 启动 5-Fold 全量指标生成管线...")
     print(f"📄 数据将流式保存至: {OUTPUT_CSV}")
     
-    # 准备写入 CSV
     file_exists = os.path.isfile(OUTPUT_CSV)
     with open(OUTPUT_CSV, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         if not file_exists:
-            writer.writerow(['Fold', 'Model', 'Padding', 'Image_ID', 'Modality', 'Dice', 'HD95'])
+            # 🔥 表头加入了所有指标
+            writer.writerow(['Fold', 'Model', 'Padding', 'Image_ID', 'Modality', 'Dice', 'IoU', 'Recall', 'Precision', 'HD95', 'ASD'])
 
-        # 实例化骨干网络（放在循环外节省显存开销，每次换 Fold 只更新权重）
         model_instances = {
             "ST-SAM": ST_SAM().to(DEVICE),
             "MSA_SAM2": MSA_Baseline_SAM2().to(DEVICE),
@@ -122,7 +136,6 @@ def main():
             "LoRA_SAM2": LoRA_SAM2().to(DEVICE)
         }
 
-        # 循环 5 个 Fold
         for fold in range(5):
             print(f"\n" + "="*50)
             print(f"🔄 正在处理 Fold {fold} ...")
@@ -137,7 +150,6 @@ def main():
             with open(fold_json_path, 'r') as f:
                 split_data = json.load(f)
 
-            # 为当前 Fold 加载模型权重
             active_models = {}
             for model_name, model in model_instances.items():
                 ckpt_path = CHECKPOINT_PATHS[model_name].format(fold=fold)
@@ -154,11 +166,9 @@ def main():
                 print(f"❌ Fold {fold} 没有任何模型可用，跳过。")
                 continue
 
-            # 遍历所有设定的 Padding 扰动（包含 "YOLO"）
             for p in PADDINGS:
                 print(f"  📐 评估 Padding = {p}")
                 val_dataset = RobustnessDataset(split_data['val'], img_size=IMG_SIZE, yolo_pred_json=yolo_json_path, padding=p)
-                # Batch Size 设为 1 最安全，避免多样本打包时的 ID 错乱
                 val_loader = DataLoader(val_dataset, batch_size=1, shuffle=False, num_workers=4)
 
                 for model_name, model in active_models.items():
@@ -169,22 +179,20 @@ def main():
                             box = batch['box'].to(DEVICE)
                             img_id = str(batch['id'][0])
                             
-                            # 判定模态
                             modality = 'Colour' if ('colour' in img_id.lower() or 'color' in img_id.lower()) else 'Infrared'
 
                             logits = model(img, box)
                             preds = torch.sigmoid(logits)
                             
-                            # 【核心修复】：必须转到 cpu() 防止 CuPy 报错
-                            d, h = compute_metrics_monai(preds.cpu(), lbl.cpu())
+                            # 🔥 接收全部 6 个指标
+                            d, iou, rec, prec, h, asd = compute_all_metrics(preds.cpu(), lbl.cpu())
                             
                             # 流式写入 CSV
-                            writer.writerow([fold, model_name, p, img_id, modality, d, h])
+                            writer.writerow([fold, model_name, p, img_id, modality, d, iou, rec, prec, h, asd])
             
-            # 及时刷入硬盘
             csvfile.flush()
 
-    print("\n🎉 全量评估完毕！所有实例级数据已安全保存至 evaluation_results_5folds.csv")
+    print(f"\n🎉 全量评估完毕！所有实例级数据已安全保存至 {OUTPUT_CSV}")
 
 if __name__ == "__main__":
     main()

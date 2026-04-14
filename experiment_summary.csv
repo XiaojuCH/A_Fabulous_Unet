@@ -298,3 +298,13 @@ date,fold,best_dice,best_epoch,train_loss_final,duration,gpu_count,batch_size,nu
 2026-04-08 22:36:25,3,0.8432,45,0.0311,2:56:16,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
 2026-04-08 22:35:56,4,0.8601,23,0.0314,2:57:49,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
 2026-04-08 22:36:09,2,0.8117,19,0.0297,2:59:48,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 01:53:31,1,0.8801,42,0.0334,2:52:42,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 01:53:46,3,0.8446,46,0.0309,2:54:06,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 01:53:31,0,0.8793,40,0.0308,2:55:42,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 01:53:16,4,0.8595,23,0.0310,2:56:35,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 01:53:08,2,0.8172,49,0.0300,2:58:27,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 05:08:03,0,0.8783,36,0.0309,2:53:40,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 05:08:04,1,0.8803,46,0.0332,2:53:48,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 05:08:20,3,0.8479,34,0.0318,2:54:04,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 05:08:10,4,0.8595,48,0.0314,2:55:13,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
+2026-04-09 05:08:23,2,0.8199,21,0.0297,2:56:36,8,8,4,0.0001,50,1024,ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter),AdamW,None,Dice + BCE
