@@ -29,7 +29,7 @@ except ImportError:
     sys.exit(1)
 
 from dataset import TearDataset
-from model import ST_SAM, LoRA_SAM2, MSA_Baseline_SAM2,MedSAM_SAM2
+from model import ST_SAM, LoRA_SAM2, MSA_Baseline_SAM2, MedSAM_SAM2, Baseline_SAM2
 from medsam_model import True_MedSAM
 
 # ================= 配置区域 =================
@@ -115,10 +115,10 @@ def calculate_metrics_robust(pred, lbl):
 
     return results
 
-def evaluate_fold(fold):
-    print(f"🔄 Evaluating Fold {fold} ...")
+def evaluate_fold(fold, ckpt_dir="./checkpoints_lora"):
+    print(f"🔄 Evaluating Fold {fold} (ckpt_dir={ckpt_dir}) ...")
     split_path = f"./data_splits/fold_{fold}.json"
-    ckpt_path = os.path.join(os.environ.get("CKPT_DIR", "./checkpoints_run1"), f"fold_{fold}/best_model.pth")
+    ckpt_path = os.path.join(ckpt_dir, f"fold_{fold}/best_model.pth")
     
     if not os.path.exists(ckpt_path):
         print(f"⚠️ Checkpoint not found: {ckpt_path}, skipping Fold {fold}")
@@ -135,8 +135,7 @@ def evaluate_fold(fold):
     loader = DataLoader(dataset, batch_size=1, shuffle=False, num_workers=4, pin_memory=True)
     
     # 加载模型（使用默认配置，与训练时一致）
-    model = ST_SAM().to(DEVICE)  # 使用默认的Hiera配置
-    # model = True_MedSAM(checkpoint_path="./checkpoints/medsam_vit_b.pth").to(DEVICE) #记得这个是madsam的权重
+    model = Baseline_SAM2().to(DEVICE)
     
     # 加载权重 (处理 DDP 前缀)
     state_dict = torch.load(ckpt_path, map_location=DEVICE)
@@ -203,8 +202,10 @@ if __name__ == "__main__":
         'Overall':  {'dice': [], 'iou': [], 'recall': [], 'precision': [], 'hd95': [], 'asd': []}
     }
 
+    ckpt_dir = "./checkpoints_ablation"
+    print(f"📂 Checkpoint Dir: {ckpt_dir}")
     for fold in [0, 1, 2, 3, 4]:
-        res_summary = evaluate_fold(fold)
+        res_summary = evaluate_fold(fold, ckpt_dir=ckpt_dir)
         if not res_summary:
             continue
 
