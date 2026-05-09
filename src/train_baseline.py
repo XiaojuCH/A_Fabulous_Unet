@@ -19,6 +19,7 @@ import matplotlib.pyplot as plt
 from monai.networks.nets import UNet, SwinUNETR, AttentionUnet, SegResNet, BasicUNetPlusPlus
 # === 引入 Torchvision 模型库 (用于 DeepLab) ===
 from torchvision.models.segmentation import deeplabv3_resnet50, DeepLabV3_ResNet50_Weights, fcn_resnet50, FCN_ResNet50_Weights
+import segmentation_models_pytorch as smp
 from dataset import TearDataset
 
 # ================= 损失函数 (与 train.py 完全一致) =================
@@ -101,6 +102,14 @@ def get_model(name):
         
         return m
     
+    elif name == "deeplabv3plus":
+        return smp.DeepLabV3Plus(
+            encoder_name="resnet50",
+            encoder_weights="imagenet",
+            in_channels=3,
+            classes=1,
+            encoder_output_stride=8,
+        )
     elif name == "fcn":
         weights = FCN_ResNet50_Weights.DEFAULT
         m = fcn_resnet50(weights=weights)
@@ -292,7 +301,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--fold", type=int, required=True)
     # 🔥 加入了新模型
-    parser.add_argument("--model", type=str, required=True, choices=["unet", "swinunet","attentionunet", "segresnet", "deeplab", "unetplusplus", "deeplab_p","fcn"])
+    parser.add_argument("--model", type=str, required=True, choices=["unet", "swinunet","attentionunet", "segresnet", "deeplab", "unetplusplus", "deeplab_p","fcn","deeplabv3plus"])
     parser.add_argument("--batch_size", type=int, default=8)
     parser.add_argument("--lr", type=float, default=1e-4) # 统一用 1e-4 保证公平
     parser.add_argument("--epochs", type=int, default=100) # Baseline 跑满 100 轮

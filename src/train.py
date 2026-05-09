@@ -30,9 +30,9 @@ CONFIG = {
     "batch_size": 8,
     "num_workers": 4,
     "lr": 1e-4,
-    "epochs": 50,
+    "epochs": 2,
     "img_size": 1024,
-    "model_name": "ST-SAM (Sam2-Hiera-L + GatedDilatedStripAdapter)",
+    "model_name": "MSA_Baseline_SAM2 (SAM2-Hiera-L + MSA)",
     "optimizer": "AdamW",
     "scheduler": "None", # 如果加了 scheduler 这里也要记
     "loss": "Dice + BCE",
@@ -119,9 +119,7 @@ def main(fold):
     train_loader = DataLoader(train_dataset, batch_size=CONFIG['batch_size'], sampler=train_sampler, num_workers=CONFIG['num_workers'], pin_memory=True)
     val_loader = DataLoader(val_dataset, batch_size=CONFIG['batch_size'], sampler=val_sampler, num_workers=CONFIG['num_workers'], pin_memory=True)
 
-    # model = ST_SAM(checkpoint_path="./checkpoints/sam2_hiera_large.pt").to(local_rank)
-    model = ST_SAM().to(local_rank)  # 使用默认的Hiera配置
-    # model = True_MedSAM(checkpoint_path="./checkpoints/medsam_vit_b.pth").to(local_rank) #记得这个是madsam的权重
+    model = MSA_Baseline_SAM2().to(local_rank)
     model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
     model = DDP(model, device_ids=[local_rank], find_unused_parameters=True)
 
@@ -133,7 +131,7 @@ def main(fold):
     best_dice = 0.0
     best_epoch = 0
     # save_dir = f"./checkpoints/fold_{fold}"
-    save_dir = os.path.join(os.environ.get("CKPT_DIR", "./checkpoints_gal6"), f"fold_{fold}")
+    save_dir = os.path.join(os.environ.get("CKPT_DIR", "./checkpoints_msa_test"), f"fold_{fold}")
     if is_master:
         os.makedirs(save_dir, exist_ok=True)
 

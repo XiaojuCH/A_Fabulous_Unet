@@ -25,6 +25,7 @@ from monai.metrics import (
 # 引入所有 Baseline 模型
 from monai.networks.nets import UNet, SwinUNETR, AttentionUnet, SegResNet, BasicUNetPlusPlus
 from torchvision.models.segmentation import deeplabv3_resnet50, DeepLabV3_ResNet50_Weights, fcn_resnet50, FCN_ResNet50_Weights
+import segmentation_models_pytorch as smp
 from dataset import TearDataset
 
 # ================= 配置区域 (必须与 ST-SAM 一致) =================
@@ -80,6 +81,14 @@ def get_model(name):
         m.classifier[4] = torch.nn.Conv2d(512, 1, kernel_size=(1, 1))
         m.aux_classifier[4] = torch.nn.Conv2d(256, 1, kernel_size=(1, 1))
         return m
+    elif name == "deeplabv3plus":
+        return smp.DeepLabV3Plus(
+            encoder_name="resnet50",
+            encoder_weights="imagenet",
+            in_channels=3,
+            classes=1,
+            encoder_output_stride=8,
+        )
     else:
         raise ValueError(f"Unknown model: {name}")
 
@@ -211,8 +220,8 @@ if __name__ == "__main__":
     # models_to_run = ["attentionunet"]
     # models_to_run = ["unet","swinunet"]
     # models_to_run = ["segresnet"]
-    # models_to_run = ["deeplab_p"]
-    models_to_run = ["fcn"]
+    models_to_run = ["deeplabv3plus"]
+    # models_to_run = ["fcn"]
     #models_to_run = ["unet", "attentionunet", "swinunet", "segresnet"]
     # 如果只想跑某一个，可以注释掉其他的，比如:
     # models_to_run = ["attentionunet"]

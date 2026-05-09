@@ -124,12 +124,30 @@ def main():
                 for name, model in models.items():
                     if "SAM" in name:
                         logits = model(img, box)
-                    elif "DeepLab" in name:
-                        logits = model(img)['out']
+                        pred = torch.sigmoid(logits)
                     else:
-                        logits = model(img)
+                        # 1. 正常的 CNN 推理
+                        if "DeepLab" in name:
+                            logits = model(img)['out']
+                        else:
+                            logits = model(img)
                         
-                    pred = torch.sigmoid(logits)
+                        pred = torch.sigmoid(logits)
+                        
+                        # 2. 引入 YOLO 空间先验：强行抹除 YOLO 框外的假阳性
+                        box_tensor = box[0]
+                        padding = 20
+                        x1, y1, x2, y2 = [int(v.item()) for v in box_tensor]
+                        x1, y1 = max(0, x1 - padding), max(0, y1 - padding)
+                        x2, y2 = min(IMG_SIZE, x2 + padding), min(IMG_SIZE, y2 + padding)
+                        
+                        # 确保是一个合法的检测框
+                        if x2 > x1 and y2 > y1 and (x2-x1) >= 10 and (y2-y1) >= 10:
+                            spatial_mask = torch.zeros_like(pred)
+                            spatial_mask[:, :, y1:y2, x1:x2] = 1.0 
+                            pred = pred * spatial_mask 
+                            
+                    # 3. 计算严谨的指标
                     dice, hd95 = compute_robust_metrics(pred.cpu(), lbl.cpu())
                     
                     global_results[name]["dice"].append(dice)
