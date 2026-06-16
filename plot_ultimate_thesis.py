@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from matplotlib.lines import Line2D
 
 # ================= 1. 顶刊极简严谨排版 (去 AI 味，回归经典) =================
 plt.rcParams.update({
@@ -275,16 +276,11 @@ def plot_robustness_traditional_lines(df):
             mean_val = df_yolo[df_yolo['Model'] == model][metric].mean()
             color = MODEL_COLORS[model]
             
-            if model == 'ST-SAM':
-                ax.axhline(y=mean_val, color=color, linestyle='--', linewidth=2.5, zorder=2)
-                bbox_props = dict(boxstyle="round,pad=0.3", fc=color, ec="none", alpha=0.9)
-                ax.text(41.5, mean_val, 'Auto (YOLO)', color='white', va='center', ha='left', 
-                        fontsize=10, fontweight='bold', bbox=bbox_props, zorder=10)
-            else:
-                ax.axhline(y=mean_val, color=color, linestyle=':', linewidth=1.2, alpha=0.6, zorder=1)
+            ax.axhline(y=mean_val, color=color, linestyle='--',
+                       linewidth=1.2, alpha=0.6, zorder=1)
 
         ax.set_xticks(xticks)
-        ax.set_xlim(-7, 51)
+        ax.set_xlim(-7, 45)
         ax.set_title(f'Robustness of {metric} to Box Expansion', fontweight='bold', pad=15)
         ax.set_xlabel('Box Expansion / Padding (Linear Pixels)')
         ax.set_ylabel(f'{metric} Score (↑)' if metric == 'Dice' else f'{metric} Error (↓, Log Scale)')
@@ -292,7 +288,11 @@ def plot_robustness_traditional_lines(df):
         if metric == 'HD95': ax.set_yscale('log')
         ax.grid(True, linestyle=':', alpha=0.6, color='gray')
         sns.despine(ax=ax)
-        ax.legend(loc='best', frameon=False)
+        handles, labels = ax.get_legend_handles_labels()
+        handles.append(Line2D([0], [0], color='#666666', linestyle='--',
+                              linewidth=1.4, label='Auto (YOLO) Baselines'))
+        labels.append('Auto (YOLO) Baselines')
+        ax.legend(handles, labels, loc='best', frameon=False)
 
     plt.tight_layout()
     plt.savefig(os.path.join(OUTPUT_DIR, 'Fig_3_Traditional_Robustness.pdf'), bbox_inches='tight')
