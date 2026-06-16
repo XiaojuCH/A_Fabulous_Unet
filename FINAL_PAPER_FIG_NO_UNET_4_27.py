@@ -34,6 +34,10 @@ MASK_GREEN = (30, 210, 70)
 FAIL_RED = '#D73027'
 SUCCESS_GREEN = '#1A9850'
 GT_WHITE = '#F7F7F7'
+FIG_SIZE = (7.16, 4.85)
+TITLE_FONTSIZE = 8.0
+ROW_GROUP_FONTSIZE = 7.4
+ROW_MODALITY_FONTSIZE = 7.0
 # ===================================================
 
 def find_image_path(folder_path, img_id):
@@ -100,7 +104,15 @@ def overlay_mask_for_panel(image_path, mask_path, img_id, model_folder):
 def draw_arrow(ax, coords, color='red'):
     if not coords or coords == (0, 0): return
     ax.annotate('', xy=coords, xytext=(coords[0]+35, coords[1]-35),
-                arrowprops=dict(facecolor=color, edgecolor='white', shrink=0.05, width=2.0, headwidth=8))
+                arrowprops=dict(
+                    arrowstyle='-|>',
+                    mutation_scale=7,
+                    facecolor=color,
+                    edgecolor='white',
+                    linewidth=0.7,
+                    shrinkA=0,
+                    shrinkB=2
+                ))
 
 def crop_start_from_focus(focus_values, side, limit, priority_value=None, margin=FOCUS_MARGIN):
     if priority_value is not None:
@@ -125,9 +137,9 @@ def generate_merged_figure():
     print(f"🚀 正在生成剔除了 U-Net 的终极 4x6 顶刊排版...")
     
     # 🚀 优化：移除 layout='constrained'，拿回绝对排版控制权
-    fig, axes = plt.subplots(nrows=4, ncols=6, figsize=(20, 12))
+    fig, axes = plt.subplots(nrows=4, ncols=6, figsize=FIG_SIZE)
     # 强制锁定极其微小的列间距和适当的行间距，确保每一列宽度绝对均等
-    plt.subplots_adjust(wspace=0.035, hspace=0.16, left=0.07, right=0.985, top=0.93, bottom=0.04)
+    plt.subplots_adjust(wspace=0.035, hspace=0.16, left=0.085, right=0.995, top=0.94, bottom=0.025)
     
     track1_cols = [
         ("Input (YOLO)", None), ("GT", "masks_gt"), 
@@ -142,8 +154,8 @@ def generate_merged_figure():
     
     all_ids = TRACK1_IDS + TRACK2_IDS
     row_labels = [
-        "[Automated]\nColour", "[Automated]\nInfrared", 
-        "[Expert-Guided]\nColour", "[Expert-Guided]\nInfrared"
+        ("Automated", "Colour"), ("Automated", "Infrared"),
+        ("Expert-guided", "Colour"), ("Expert-guided", "Infrared")
     ]
     for row_idx, img_id in enumerate(all_ids):
         is_track1 = row_idx < 2
@@ -185,9 +197,15 @@ def generate_merged_figure():
             ax.axis('off')
             
             if row_idx == 0 or row_idx == 2: 
-                ax.set_title(col_title, fontsize=13.5, fontweight='bold', pad=7)
+                ax.set_title(col_title, fontsize=TITLE_FONTSIZE, fontweight='bold', pad=2.5)
             if col_idx == 0:
-                ax.text(-0.13, 0.5, row_labels[row_idx], transform=ax.transAxes, fontsize=13.5, fontweight='bold', va='center', ha='right')
+                row_group, row_modality = row_labels[row_idx]
+                ax.text(-0.115, 0.54, row_group, transform=ax.transAxes,
+                        fontsize=ROW_GROUP_FONTSIZE, fontweight='semibold', color='#222222',
+                        va='center', ha='right')
+                ax.text(-0.115, 0.44, row_modality, transform=ax.transAxes,
+                        fontsize=ROW_MODALITY_FONTSIZE, fontweight='normal', color='#4A4A4A',
+                        va='center', ha='right')
                 
             if col_idx == 0:
                 img_to_show = img[crop_y_min:crop_y_max, crop_x_min:crop_x_max]
@@ -203,7 +221,7 @@ def generate_merged_figure():
                 box_y = max(0, ys.min() - pad - crop_y_min)
                 box_w = min(crop_x_max - crop_x_min, xs.max() + pad - crop_x_min) - box_x
                 box_h = min(crop_y_max - crop_y_min, ys.max() + pad - crop_y_min) - box_y
-                rect = patches.Rectangle((box_x, box_y), box_w, box_h, linewidth=2.2, edgecolor=box_color, facecolor='none', linestyle='--')
+                rect = patches.Rectangle((box_x, box_y), box_w, box_h, linewidth=1.0, edgecolor=box_color, facecolor='none', linestyle='--')
                 ax.add_patch(rect)
 
             f_c = ARROWS.get(img_id, {}).get('fail', (0,0))
@@ -237,7 +255,7 @@ def generate_merged_figure():
                     
                     for spine in axins.spines.values():
                         spine.set_edgecolor(zoom_color)
-                        spine.set_linewidth(2.0)
+                        spine.set_linewidth(0.9)
                         
                     tx_min = target_pt[0] - zoom_size//2
                     tx_max = target_pt[0] + zoom_size//2
@@ -246,7 +264,7 @@ def generate_merged_figure():
                     
                     # 1. 目标小框：实线，突出焦点
                     rect_target = patches.Rectangle((tx_min, ty_min), zoom_size, zoom_size, 
-                                                    linewidth=1.3, edgecolor=zoom_color, facecolor='none')
+                                                    linewidth=0.8, edgecolor=zoom_color, facecolor='none')
                     ax.add_patch(rect_target)
                     
                     # 2. 牵引连线：虚线+半透明，减少信息遮挡，建立视觉层级
@@ -256,17 +274,17 @@ def generate_merged_figure():
                     if inset_loc == 2:
                         cp1 = ConnectionPatch(xyA=(tx_min, ty_min), coordsA="data", axesA=ax, 
                                               xyB=(1, 1), coordsB="axes fraction", axesB=axins, 
-                                              color=zoom_color, lw=1.5, alpha=line_alpha, linestyle=line_style)
+                                              color=zoom_color, lw=0.8, alpha=line_alpha, linestyle=line_style)
                         cp2 = ConnectionPatch(xyA=(tx_min, ty_max), coordsA="data", axesA=ax, 
                                               xyB=(1, 0), coordsB="axes fraction", axesB=axins, 
-                                              color=zoom_color, lw=1.5, alpha=line_alpha, linestyle=line_style)
+                                              color=zoom_color, lw=0.8, alpha=line_alpha, linestyle=line_style)
                     else:
                         cp1 = ConnectionPatch(xyA=(tx_max, ty_min), coordsA="data", axesA=ax, 
                                               xyB=(0, 1), coordsB="axes fraction", axesB=axins, 
-                                              color=zoom_color, lw=1.5, alpha=line_alpha, linestyle=line_style)
+                                              color=zoom_color, lw=0.8, alpha=line_alpha, linestyle=line_style)
                         cp2 = ConnectionPatch(xyA=(tx_max, ty_max), coordsA="data", axesA=ax, 
                                               xyB=(0, 0), coordsB="axes fraction", axesB=axins, 
-                                              color=zoom_color, lw=1.5, alpha=line_alpha, linestyle=line_style)
+                                              color=zoom_color, lw=0.8, alpha=line_alpha, linestyle=line_style)
                                               
                     ax.add_artist(cp1)
                     ax.add_artist(cp2)
