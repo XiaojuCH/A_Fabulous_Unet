@@ -10,13 +10,12 @@ from monai.metrics import compute_dice, compute_hausdorff_distance
 from torchvision.models.segmentation import deeplabv3_resnet50, DeepLabV3_ResNet50_Weights
 from monai.networks.nets import SwinUNETR
 
-
 import sys
 import argparse
 sys.path.append("src") # 确保能找到 dataset 和 model
 
 # 引入你的模型和数据集
-from model import ST_SAM, Baseline_SAM2
+from model import ST_SAM, Baseline_SAM2, MSA_Baseline_SAM2, LoRA_SAM2
 from dataset import TearDataset
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
@@ -86,6 +85,8 @@ def main():
     global_results = {
         "ST-SAM (Ours)": {"dice": [], "hd95": []},
         "Baseline SAM2": {"dice": [], "hd95": []},
+        "SAM2-MSA":      {"dice": [], "hd95": []},  # <-- 新增 MSA
+        "SAM2-LoRA":     {"dice": [], "hd95": []},  # <-- 新增 LoRA
         "DeepLabV3+":    {"dice": [], "hd95": []},
         "Swin-UNETR":    {"dice": [], "hd95": []}
     }
@@ -102,9 +103,12 @@ def main():
         loader = DataLoader(dataset, batch_size=1, shuffle=False)
         
         # 加载四个模型
+        # 加载六个模型
         models = {
             "ST-SAM (Ours)": load_weights(ST_SAM().to(DEVICE), f"./checkpoints_run1/fold_{fold}/best_model.pth"),
             "Baseline SAM2": load_weights(Baseline_SAM2().to(DEVICE), f"./checkpoints_ablation/fold_{fold}/best_model.pth"),
+            "SAM2-MSA":      load_weights(MSA_Baseline_SAM2().to(DEVICE), f"./checkpoints_msa/fold_{fold}/best_model.pth"),  # <-- 新增
+            "SAM2-LoRA":     load_weights(LoRA_SAM2().to(DEVICE), f"./checkpoints_lora/fold_{fold}/best_model.pth"),   # <-- 新增
             "DeepLabV3+":    load_weights(get_deeplab_p().to(DEVICE), f"./checkpoints_New_baseline/deeplab_p/fold_{fold}/best_model.pth"),
             "Swin-UNETR":    load_weights(get_swinunet().to(DEVICE), f"./checkpoints_New_baseline/swinunet/fold_{fold}/best_model.pth")
         }

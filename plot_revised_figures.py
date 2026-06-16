@@ -36,7 +36,7 @@ OUTPUT_DIR = "Ultimate_Thesis_Figures"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 MODEL_ORDER  = ['Baseline_SAM2', 'LoRA_SAM2', 'MSA_SAM2', 'ST-SAM']
-MODEL_LABELS = ['SAM2\nBaseline', 'SAM2\nLoRA', 'SAM2\nMSA', 'ST-SAM\n(Ours)']
+MODEL_LABELS = ['SAM2\nBaseline', 'SAM2\nLoRA', 'SAM2\nMSA', 'GAL-SAM\n(Ours)']
 MODEL_COLORS = {
     'ST-SAM':        '#B30000',
     'MSA_SAM2':      '#1F77B4',
@@ -197,7 +197,7 @@ def plot_fig2(df_yolo):
         med_base = np.median(sub_base)
         
         ax.annotate(
-            f'ST-SAM {mod} Median: {med_st:.3f}\n(+{med_st - med_base:.3f} vs Baseline)',
+            f'GAL-SAM {mod} Median: {med_st:.3f}\n(+{med_st - med_base:.3f} vs Baseline)',
             xy=(med_st, 0.5), xytext=(xt, yt),
             ha=align, va='center', 
             fontsize=8.5, color='#B30000', fontweight='bold',

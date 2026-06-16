@@ -70,6 +70,9 @@ def plot_sota_glass_boxplot(df):
 
     for ax in axes:
         ax.grid(True, axis='y', linestyle='--', alpha=0.5, color='gray') 
+        ax.set_xticks(ax.get_xticks())
+        new_xticks = [label.get_text().replace('ST-SAM', 'GAL-SAM') for label in ax.get_xticklabels()]
+        ax.set_xticklabels(new_xticks)
         handles, labels = ax.get_legend_handles_labels()
         ax.legend(handles=handles, labels=labels, title='', loc='best', frameon=True, edgecolor='black')
         sns.despine(ax=ax)
@@ -125,8 +128,12 @@ def plot_robustness_clean_lines(df):
         if metric == 'HD95': ax.set_yscale('log')
         ax.grid(True, linestyle='-', alpha=0.3, color='gray')
         sns.despine(ax=ax)
-        handles, labels = ax.get_legend_handles_labels()
-        ax.legend(handles=handles, labels=labels, loc='best', frameon=False)
+        
+        # 【修复 Error】：确保先获取原始图例，存在新变量里再替换
+        handles, orig_labels = ax.get_legend_handles_labels()
+        new_labels = [lbl.replace('ST-SAM', 'GAL-SAM') for lbl in orig_labels]
+        
+        ax.legend(handles=handles, labels=new_labels, loc='best', frameon=False)
 
     plt.tight_layout()
     plt.savefig(os.path.join(OUTPUT_DIR, 'Fig_2_Robustness_Lines.pdf'), bbox_inches='tight')

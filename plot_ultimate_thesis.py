@@ -263,10 +263,11 @@ def plot_robustness_traditional_lines(df):
             z = 5 if model == 'ST-SAM' else 3
             alpha = 1.0 if model == 'ST-SAM' else 0.8
             
+            display_name = 'GAL-SAM' if model == 'ST-SAM' else model
             ax.errorbar(
                 x, y, yerr=yerr, fmt='-o', color=MODEL_COLORS[model], 
                 linewidth=lw, markersize=6, capsize=4, capthick=1.2, 
-                alpha=alpha, label=model, zorder=z
+                alpha=alpha, label=display_name, zorder=z
             )
             
         # 绘制显眼的 YOLO 基准线
