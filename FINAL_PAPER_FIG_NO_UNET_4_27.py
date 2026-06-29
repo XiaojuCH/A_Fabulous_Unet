@@ -144,12 +144,12 @@ def generate_merged_figure():
     track1_cols = [
         ("Input (YOLO)", None), ("GT", "masks_gt"), 
         ("Swin-UNETR", "masks_swinunet"), ("DeepLabV3", "masks_deeplab"), 
-        ("SAM2 Base", "masks_baseline_sam_yolo"), ("GAL-SAM (Ours)", "masks_stsam_yolo")
+        ("SAM2 Base", "masks_baseline_sam_yolo"), ("GAL-SAM2 (Ours)", "masks_stsam_yolo")
     ]
     track2_cols = [
         ("Input (Expert)", None), ("GT", "masks_gt"), 
         ("MedSAM", "masks_medsam_gt"), ("SAM2 Base", "masks_baseline_sam_gt"), 
-        ("SAM2 MSA", "masks_msa_gt"), ("GAL-SAM (Ours)", "masks_stsam_gt")
+        ("SAM2 MSA", "masks_msa_gt"), ("GAL-SAM2 (Ours)", "masks_stsam_gt")
     ]
     
     all_ids = TRACK1_IDS + TRACK2_IDS
