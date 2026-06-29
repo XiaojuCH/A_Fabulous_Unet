@@ -1,4 +1,4 @@
-import cv2
+﻿import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -7,21 +7,21 @@ import os
 import glob
 from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 
-# ================= 0. 顶刊出版规范级配置 =================
-# 强制要求 Matplotlib 将字体嵌入为 Type 42，避免 ScholarOne 等系统报 Type 3 字体错误
+# ================= 0. 椤跺垔鍑虹増瑙勮寖绾ч厤缃?=================
+# 寮哄埗瑕佹眰 Matplotlib 灏嗗瓧浣撳祵鍏ヤ负 Type 42锛岄伩鍏?ScholarOne 绛夌郴缁熸姤 Type 3 瀛椾綋閿欒
 plt.rcParams['pdf.fonttype'] = 42
 plt.rcParams['ps.fonttype'] = 42
 plt.rcParams['figure.dpi'] = 300
 
-# ================= 1. 核心配置区域 =================
+# ================= 1. 鏍稿績閰嶇疆鍖哄煙 =================
 DATA_ROOT = "./results"
 
-# 赛道一：彩色选你最新找出的完美断裂 000160；红外用左侧断裂的 000579
+# 璧涢亾涓€锛氬僵鑹查€変綘鏈€鏂版壘鍑虹殑瀹岀編鏂 000160锛涚孩澶栫敤宸︿晶鏂鐨?000579
 TRACK1_IDS = ['Color1_000160', 'Infrared3_000579']
-# 赛道二：彩色用严重溢出的 000050；红外用尾部粗钝的 000388
+# 璧涢亾浜岋細褰╄壊鐢ㄤ弗閲嶆孩鍑虹殑 000050锛涚孩澶栫敤灏鹃儴绮楅挐鐨?000388
 TRACK2_IDS = ['Color2_000050', 'Infrared3_000388']
 
-# 🎯 已经精确估算的画中画坐标
+# 馃幆 宸茬粡绮剧‘浼扮畻鐨勭敾涓敾鍧愭爣
 ARROWS = {
     "Color1_000160":    {'fail': (431, 682), 'success': (431, 682)},
     "Infrared3_000579": {'fail': (158, 464), 'success': (158, 464)},
@@ -61,7 +61,7 @@ def overlay_mask(image_path, mask_path, color=MASK_GREEN, alpha=0.45):
     colored_mask[mask > 127] = color
     img_blended = cv2.addWeighted(img, 1.0, colored_mask, alpha, 0)
     
-    # 提取并绘制硬边缘轮廓，防止半透明蒙版导致边缘模糊
+    # 鎻愬彇骞剁粯鍒剁‖杈圭紭杞粨锛岄槻姝㈠崐閫忔槑钂欑増瀵艰嚧杈圭紭妯＄硦
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(img_blended, contours, -1, color, thickness=2)
     
@@ -134,12 +134,11 @@ def crop_start_from_focus(focus_values, side, limit, priority_value=None, margin
 
 def generate_merged_figure():
     fig_name = "Fig_2_Ultimate_4x6_Comparison.pdf"
-    print(f"🚀 正在生成剔除了 U-Net 的终极 4x6 顶刊排版...")
+    print(f"馃殌 姝ｅ湪鐢熸垚鍓旈櫎浜?U-Net 鐨勭粓鏋?4x6 椤跺垔鎺掔増...")
     
-    # 🚀 优化：移除 layout='constrained'，拿回绝对排版控制权
+    # 馃殌 浼樺寲锛氱Щ闄?layout='constrained'锛屾嬁鍥炵粷瀵规帓鐗堟帶鍒舵潈
     fig, axes = plt.subplots(nrows=4, ncols=6, figsize=FIG_SIZE)
-    # 强制锁定极其微小的列间距和适当的行间距，确保每一列宽度绝对均等
-    plt.subplots_adjust(wspace=0.035, hspace=0.16, left=0.085, right=0.995, top=0.94, bottom=0.025)
+    plt.subplots_adjust(wspace=0.035, hspace=0.16, left=0.048, right=0.995, top=0.94, bottom=0.025)
     
     track1_cols = [
         ("Input (YOLO)", None), ("GT", "masks_gt"), 
@@ -153,10 +152,7 @@ def generate_merged_figure():
     ]
     
     all_ids = TRACK1_IDS + TRACK2_IDS
-    row_labels = [
-        ("Automated", "Colour"), ("Automated", "Infrared"),
-        ("Expert-guided", "Colour"), ("Expert-guided", "Infrared")
-    ]
+    row_modalities = ["Colour", "Infrared", "Colour", "Infrared"]
     for row_idx, img_id in enumerate(all_ids):
         is_track1 = row_idx < 2
         columns = track1_cols if is_track1 else track2_cols
@@ -199,13 +195,10 @@ def generate_merged_figure():
             if row_idx == 0 or row_idx == 2: 
                 ax.set_title(col_title, fontsize=TITLE_FONTSIZE, fontweight='bold', pad=2.5)
             if col_idx == 0:
-                row_group, row_modality = row_labels[row_idx]
-                ax.text(-0.115, 0.54, row_group, transform=ax.transAxes,
-                        fontsize=ROW_GROUP_FONTSIZE, fontweight='semibold', color='#222222',
-                        va='center', ha='right')
-                ax.text(-0.115, 0.44, row_modality, transform=ax.transAxes,
-                        fontsize=ROW_MODALITY_FONTSIZE, fontweight='normal', color='#4A4A4A',
-                        va='center', ha='right')
+                ax.text(-0.085, 0.5, row_modalities[row_idx], transform=ax.transAxes,
+                        rotation=90, fontsize=ROW_MODALITY_FONTSIZE,
+                        fontweight='normal', color='#4A4A4A',
+                        va='center', ha='center')
                 
             if col_idx == 0:
                 img_to_show = img[crop_y_min:crop_y_max, crop_x_min:crop_x_max]
@@ -262,13 +255,13 @@ def generate_merged_figure():
                     ty_min = target_pt[1] - zoom_size//2
                     ty_max = target_pt[1] + zoom_size//2
                     
-                    # 1. 目标小框：实线，突出焦点
+                    # 1. 鐩爣灏忔锛氬疄绾匡紝绐佸嚭鐒︾偣
                     rect_target = patches.Rectangle((tx_min, ty_min), zoom_size, zoom_size, 
                                                     linewidth=0.8, edgecolor=zoom_color, facecolor='none')
                     ax.add_patch(rect_target)
                     
-                    # 2. 牵引连线：虚线+半透明，减少信息遮挡，建立视觉层级
-                    line_style = (0, (6, 4))  # 6pt线段，4pt间距
+                    # 2. 鐗靛紩杩炵嚎锛氳櫄绾?鍗婇€忔槑锛屽噺灏戜俊鎭伄鎸★紝寤虹珛瑙嗚灞傜骇
+                    line_style = (0, (6, 4))  # 6pt绾挎锛?pt闂磋窛
                     line_alpha = 0.55  
                     
                     if inset_loc == 2:
@@ -289,9 +282,29 @@ def generate_merged_figure():
                     ax.add_artist(cp1)
                     ax.add_artist(cp2)
 
+    group_specs = [
+        ("Automated", axes[0, 0], axes[1, 0]),
+        ("Expert-guided", axes[2, 0], axes[3, 0]),
+    ]
+    for group_name, top_ax, bottom_ax in group_specs:
+        top_box = top_ax.get_position()
+        bottom_box = bottom_ax.get_position()
+        fig.text(
+            top_box.x0 - 0.028,
+            (top_box.y1 + bottom_box.y0) / 2,
+            group_name,
+            rotation=90,
+            ha='center',
+            va='center',
+            fontsize=ROW_GROUP_FONTSIZE,
+            fontweight='semibold',
+            color='#222222',
+        )
+
     plt.savefig(fig_name, bbox_inches='tight')
     plt.close()
-    print(f"✨ 严谨检查完毕！最终终极版图表已成功导出: {fig_name}")
+    print(f"鉁?涓ヨ皑妫€鏌ュ畬姣曪紒鏈€缁堢粓鏋佺増鍥捐〃宸叉垚鍔熷鍑? {fig_name}")
 
 if __name__ == "__main__":
     generate_merged_figure()
+
